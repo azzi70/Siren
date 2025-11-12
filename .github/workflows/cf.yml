@@ -38,7 +38,7 @@ jobs:
           cargo install worker-build --locked || true
 
       - name: Install Wrangler globally
-        run: npm install -g @cloudflare/wrangler@3
+        run: npm install -g @cloudflare/wrangler@2
 
       - name: Publish with Wrangler Action (preferred)
         uses: cloudflare/wrangler-action@v3
