@@ -23,28 +23,35 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Setup Rust toolchain (if needed)
+      - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
+          target: wasm32-unknown-unknown
           override: true
 
-      - name: Add wasm target (safe if Rust not used)
+      - name: Install dependencies for Rust build
         run: |
-          rustup target add wasm32-unknown-unknown || true
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libssl-dev
+          cargo install worker-build --locked || true
 
-      - name: Install Wrangler globally (fallback)
-        run: |
-          npm install -g @cloudflare/wrangler@3 || true
+      - name: Install Wrangler globally
+        run: npm install -g @cloudflare/wrangler@3
 
-      - name: Publish with Wrangler Action (preferred, uses token)
+      - name: Publish with Wrangler Action (preferred)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: "publish"
-          # optional: accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Fallback verbose publish (logs more if needed)
+          command: publish
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RUST_BACKTRACE: full
+          CARGO_TERM_COLOR: always
+
+      - name: Fallback verbose publish (extra logs)
         run: |
           echo "=== wrangler version ==="
           wrangler --version || npx wrangler --version || true
@@ -52,3 +59,4 @@ jobs:
           npx wrangler publish --verbose || true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
