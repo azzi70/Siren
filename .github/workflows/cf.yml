@@ -35,9 +35,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config libssl-dev
-          # pastikan wasm-bindgen dependency versi yang menghasilkan schema 0.2.105
-          cargo update -p wasm-bindgen --precise 0.2.105 || true
-          # install worker-build (will use the updated dependency)
+          # Force-install wasm-bindgen-cli v0.2.100 to match project's wasm-bindgen
+          cargo install -f wasm-bindgen-cli --version 0.2.100 || true
+          # Install worker-build (will use the wasm-bindgen binary just installed)
           cargo install worker-build --locked || true
 
       # Use the official Wrangler action to publish
