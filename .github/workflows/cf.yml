@@ -2,10 +2,10 @@ name: cf workers
 
 on:
   workflow_dispatch:
+
   push:
     branches:
       - master
-      - main
     paths-ignore:
       - 'README.md'
       - 'LICENSE.md'
@@ -15,49 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: cf
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-
-      - name: Install dependencies for Rust build + fix wasm-bindgen mismatch
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libssl-dev
-          # Force-install wasm-bindgen-cli v0.2.100 to match project's wasm-bindgen
-          cargo install -f wasm-bindgen-cli --version 0.2.100 || true
-          # Install worker-build (will use the wasm-bindgen binary just installed)
-          cargo install worker-build --locked || true
-
-      # Use the official Wrangler action to publish
-      - name: Publish with Wrangler Action (preferred)
+      - uses: actions/checkout@v4
+      - name: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: publish
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          RUST_BACKTRACE: full
-          CARGO_TERM_COLOR: always
-
-      - name: Fallback verbose publish (extra logs)
-        run: |
-          echo "=== wrangler version ==="
-          wrangler --version || npx wrangler --version || true
-          echo "=== try verbose publish (fallback) ==="
-          npx wrangler publish --verbose || true
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
