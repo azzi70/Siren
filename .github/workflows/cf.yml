@@ -2,10 +2,10 @@ name: cf workers
 
 on:
   workflow_dispatch:
-
   push:
     branches:
       - master
+      - main
     paths-ignore:
       - 'README.md'
       - 'LICENSE.md'
@@ -15,8 +15,40 @@ jobs:
     runs-on: ubuntu-latest
     environment: cf
     steps:
-      - uses: actions/checkout@v4
-      - name: deploy
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Rust toolchain (if needed)
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Add wasm target (safe if Rust not used)
+        run: |
+          rustup target add wasm32-unknown-unknown || true
+
+      - name: Install Wrangler globally (fallback)
+        run: |
+          npm install -g @cloudflare/wrangler@3 || true
+
+      - name: Publish with Wrangler Action (preferred, uses token)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: "publish"
+          # optional: accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Fallback verbose publish (logs more if needed)
+        run: |
+          echo "=== wrangler version ==="
+          wrangler --version || npx wrangler --version || true
+          echo "=== try verbose publish (fallback) ==="
+          npx wrangler publish --verbose || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
