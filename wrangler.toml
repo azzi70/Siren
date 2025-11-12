@@ -1,3 +1,5 @@
+account_id = "ca37d997fbea4b261f827c0a8882b165"
+
 name = "siren"
 main = "build/worker/shim.mjs"
 compatibility_date = "2024-05-23"
