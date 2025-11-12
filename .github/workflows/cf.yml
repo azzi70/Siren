@@ -37,14 +37,13 @@ jobs:
           sudo apt-get install -y build-essential pkg-config libssl-dev
           cargo install worker-build --locked || true
 
-      - name: Install Wrangler globally
-        run: npm install -g @cloudflare/wrangler@2
-
+      # Use the official Wrangler action to publish (no global npm install)
       - name: Publish with Wrangler Action (preferred)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: publish
+          # optional: accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
